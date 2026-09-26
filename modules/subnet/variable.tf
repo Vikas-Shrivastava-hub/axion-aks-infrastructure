@@ -17,8 +17,11 @@ variable "subnet" {
     private_endpoint_network_policies             = optional(string)
     private_link_service_network_policies_enabled = optional(bool)
     sharing_scope                                 = optional(string)
-    service_endpoints                             = optional(list(string))
-    service_endpoint_policy_ids                   = optional(list(string))
+    service_endpoint = optional(object({
+      service            = string
+      network_identifier = optional(string)
+    }))
+    service_endpoint_policy_ids = optional(list(string))
 
   }))
 }

@@ -9,8 +9,8 @@ resource "azurerm_subnet" "subnet" {
     content {
       name = delegation.value.name
       service_delegation {
-        name    = delegation.value.service_delegation.service_name
-        actions = lookup(delegation.value.service_delegation, "actions", [])
+        name    = delegation.value.service_name
+        actions = lookup(delegation.value, "actions", [])
       }
     }
   }
@@ -19,12 +19,19 @@ resource "azurerm_subnet" "subnet" {
     for_each = each.value.ip_address_pool != null ? [each.value.ip_address_pool] : []
     content {
       id                     = ip_address_pool.value.id
-      number_of_ip_addresses = ip_address_pool.value.number
+      number_of_ip_addresses = ip_address_pool.value.number_of_ip_addresses
     }
   }
   private_endpoint_network_policies             = lookup(each.value, "private_endpoint_network_policies", null)
   private_link_service_network_policies_enabled = lookup(each.value, "private_link_service_network_policies_enabled", null)
   sharing_scope                                 = lookup(each.value, "sharing_scope", null)
   service_endpoint_policy_ids                   = lookup(each.value, "service_endpoint_policy_ids", [])
+  dynamic "service_endpoint" {
+    for_each = each.value.service_endpoint != null ? [each.value.service_endpoint] : []
+    content {
+      service = service_endpoint.value.service
+      network_identifier = lookup(service_endpoint.value, "network_identifier", null)
+    }
+  }
 
 }
