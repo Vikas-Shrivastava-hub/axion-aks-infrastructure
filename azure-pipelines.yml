@@ -1,0 +1,105 @@
+trigger:
+- feature/*
+
+pool: devops-pool
+
+variables:
+  - name: dir
+    value: $(System.DefaultWorkingDirectory)/environments
+  - group: shared-keys
+
+stages:
+- stage: installation
+  displayName: Tool Installation
+  jobs:
+  - job: tool
+    displayName: Terraform Install
+    steps:
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: 'latest'
+
+- stage: securityandlinting
+  displayName: Security And Linting
+  jobs:
+  - job: linting
+    displayName: Linting (tflint)
+    steps:
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(dir)/dev'
+        commandOptions: '-backend=false'
+        backendServiceArm: 'aks-sc'
+        backendAzureRmStorageAccountName: 'strmono'
+        backendAzureRmContainerName: 'statefile'
+        backendAzureRmKey: 'axion-dev-statefile'
+      displayName: Init
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+        workingDirectory: '$(dir)/dev'
+      displayName: Validate
+  
+  - job: formatting
+    displayName: Terrafrom fmt
+    dependsOn: linting
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'terraform fmt -check-recursive'
+        workingDirectory: '$(dir)/dev'
+      displayName: fmt
+    
+- stage: plan
+  displayName: Aks-Infra-planning
+  jobs:
+    - job: planning
+      displayName: Aks-Infra-Plan
+      steps:
+      - task: TerraformTask@5
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: '$(dir)/dev'
+          backendServiceArm: 'aks-sc'
+          backendAzureRmStorageAccountName: 'strmono'
+          backendAzureRmContainerName: 'statefile'
+          backendAzureRmKey: 'axion-dev-statefile'
+        displayName: Init
+      - task: TerraformTask@5
+        inputs:
+          provider: 'azurerm'
+          command: 'plan'
+          workingDirectory: '$(dir)/dev'
+          environmentServiceNameAzureRM: 'aks-sc'
+        displayName: Plan
+
+- stage: cost
+  displayName: Cost Estimation
+  jobs:
+  - job: cost
+    displayName: Cost Estimation
+    steps:
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(dir)/dev'
+        backendServiceArm: 'aks-sc'
+        backendAzureRmStorageAccountName: 'strmono'
+        backendAzureRmContainerName: 'statefile'
+        backendAzureRmKey: 'axion-dev-statefile'
+      displayName: Init
+    - task: InfracostSetup@2
+      inputs:
+        apiKey: '$(infracost-api-key)'
+        version: '0.10.x'
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'infracost breakdown --path $(dir)/dev'
+        
