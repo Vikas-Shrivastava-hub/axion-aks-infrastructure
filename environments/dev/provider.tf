@@ -6,6 +6,13 @@ terraform {
         version = "5.0.0"
     }
   }
+  backend "azurerm" {
+    resource_group_name = "mono-dev-shared-rg"
+    storage_account_name = "strmono"
+    container_name = "statefile"
+    key = "axion-dev-statefile"
+    
+  }
 }
 provider "azurerm" {
   features {
