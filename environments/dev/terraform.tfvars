@@ -21,15 +21,15 @@ subnet = {
 }
 aks_cluster = {
   aks1 = {
-    name = "aks-axion-dev"
-    rg_name = "rg-axion-dev"
+    name        = "aks-axion-dev"
+    rg_name     = "rg-axion-dev"
     subnet_name = "snet-axion-aks-dev"
-    vnet_name = "vnet-axion-dev"
-    dns_prefix = "axion-dns-dev"
+    vnet_name   = "vnet-axion-dev"
+    dns_prefix  = "axion-dns-dev"
     default_node_pool = {
-      name = "default"
-      node_count = 1
-      vm_size = "Standard_D2als_v6"
+      name           = "default"
+      node_count     = 1
+      vm_size        = "Standard_D2als_v6"
       vnet_subnet_id = "data"
 
     }
@@ -38,11 +38,11 @@ aks_cluster = {
 
     }
     network_profile = {
-      network_plugin = "azure"
+      network_plugin      = "azure"
       network_plugin_mode = "overlay"
-      service_cidr = "172.16.0.0/16"
-      dns_service_ip = "172.16.0.10"
-      network_policy = "calico"
+      service_cidr        = "172.16.0.0/16"
+      dns_service_ip      = "172.16.0.10"
+      network_policy      = "calico"
     }
     node_provisioning_profile = {
       default_node_pools = "Auto"

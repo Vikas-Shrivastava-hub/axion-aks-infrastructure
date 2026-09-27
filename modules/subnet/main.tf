@@ -29,7 +29,7 @@ resource "azurerm_subnet" "subnet" {
   dynamic "service_endpoint" {
     for_each = each.value.service_endpoint != null ? [each.value.service_endpoint] : []
     content {
-      service = service_endpoint.value.service
+      service            = service_endpoint.value.service
       network_identifier = lookup(service_endpoint.value, "network_identifier", null)
     }
   }

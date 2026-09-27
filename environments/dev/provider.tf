@@ -1,17 +1,17 @@
 terraform {
-    required_version = ">= 0.14"
+  required_version = ">= 0.14"
   required_providers {
     azurerm = {
-        source  = "hashicorp/azurerm"
-        version = "5.0.0"
+      source  = "hashicorp/azurerm"
+      version = "5.0.0"
     }
   }
   backend "azurerm" {
-    resource_group_name = "mono-dev-shared-rg"
+    resource_group_name  = "mono-dev-shared-rg"
     storage_account_name = "strmono"
-    container_name = "statefile"
-    key = "axion-dev-statefile"
-    
+    container_name       = "statefile"
+    key                  = "axion-dev-statefile"
+
   }
 }
 provider "azurerm" {
