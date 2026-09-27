@@ -50,7 +50,7 @@ stages:
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
-        script: 'terraform fmt -check-recursive'
+        script: 'terraform fmt -check -recursive'
         workingDirectory: '$(dir)/dev'
       displayName: fmt
     
