@@ -1,0 +1,121 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+paths:
+    exclude:
+      - README.md
+
+pool: devops-pool
+variables:
+ - name: dir
+   value: $(System.defaultWorkingDirectory)/environments
+
+stages:
+- stage: Terraform_Setup
+  displayName: Terraform Setup
+  jobs:
+  - job: setup_job
+    displayName: Install Terraform
+    steps:
+    - task: TerraformInstaller@1
+      inputs:
+        terraformVersion: 'latest'
+
+- stage: Validation
+  displayName: Terraform Validate
+  jobs:
+  - job: formatting
+    displayName: Terraform format
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'terraform fmt -check -recursive'
+        workingDirectory: '$(dir)/dev'
+
+  - job: validate
+    displayName: Terraform Validate
+    dependsOn: formatting
+    steps:
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(dir)/dev'
+        commandOptions: '-backend=false'
+        backendServiceArm: 'aks-sc'
+        backendAzureRmStorageAccountName: 'strmono'
+        backendAzureRmContainerName: 'statefile'
+        backendAzureRmKey: 'axion-dev-statefile'
+      displayName: Terraform Init
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+        workingDirectory: '$(dir)/dev'
+      displayName: Terraform Validate
+  
+- stage: Deployment_Planning
+  displayName: Deployment Plan
+  jobs:
+  - job: Plan
+    displayName: Terraform Plan
+    steps:
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(dir)/dev'
+        backendServiceArm: 'aks-sc'
+        backendAzureRmStorageAccountName: 'strmono'
+        backendAzureRmContainerName: 'statefile'
+        backendAzureRmKey: 'axion-dev-statefile'
+      displayName: Terraform Init
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(dir)/dev'
+        environmentServiceNameAzureRM: 'aks-sc'
+
+
+- stage: Manual_Approval
+  displayName: Manual Approval
+  jobs:
+  - job: approval
+    displayName: Manual Approval
+    pool: server
+    steps:
+    - task: ManualValidation@1
+      inputs:
+        notifyUsers: 'vikasshri2308@gamil.com'
+
+- stage: Infra_Deployment
+  displayName: Infra Deployment
+  jobs:
+  - job: Infra_deployment
+    displayName: Infra Deployment
+    steps:
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(dir)/dev'
+        backendServiceArm: 'aks-sc'
+        backendAzureRmStorageAccountName: 'strmono'
+        backendAzureRmContainerName: 'statefile'
+        backendAzureRmKey: 'axion-dev-statefile'
+      displayName: Terraform Init
+    - task: TerraformTask@5
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: '$(dir)/dev'
+        environmentServiceNameAzureRM: 'aks-sc'
+      displayName: Deployment
+
+    
+    
