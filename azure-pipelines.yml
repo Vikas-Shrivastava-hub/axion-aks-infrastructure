@@ -1,5 +1,12 @@
-trigger:
-- feature/*
+trigger: none
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - Readme.md
 
 pool: devops-pool
 
