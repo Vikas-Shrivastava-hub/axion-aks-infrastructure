@@ -19,8 +19,8 @@ stages:
       inputs:
         terraformVersion: 'latest'
 
-- stage: securityandlinting
-  displayName: Security And Linting
+- stage: codevalidation
+  displayName: Code Validation
   jobs:
   - job: linting
     displayName: Linting (tflint)
@@ -53,6 +53,52 @@ stages:
         script: 'terraform fmt -check -recursive'
         workingDirectory: '$(dir)/dev'
       displayName: fmt
+
+- stage: securityandlinting
+  displayName: Security And Linting
+  jobs:
+  - job: linting
+    displayName: Linting (tflint)
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          Invoke-WebRequest -Uri https://github.com/terraform-linters/tflint/releases/download/latest/tflint_windows_amd64.zip -OutFile tflint.zip
+          Extract-Archive tflint.zip -DestinationPath tflint
+          $env: PATH += ";$(System.DefaultWorkingDirectory)/tflint
+        workingDirectory: '$(dir)/dev'
+      displayName: Tflint Installation
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          tflint --init
+          tflint --chdir .
+        workingDirectory: '$(dir)/dev'
+      displayName: Run Tflint
+  
+  - job: security
+    displayName: Security Scanning(tfsec)
+    dependsOn: linting
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          Invoke-WebRequest -Uri https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-windows-amd64.exe -OutFile tfsec.exe
+          New-Item -ItemType Directory -Name tfsec -Force
+          Move-Item tfsec.exe tfsec/tfsec.exe
+          $env:Path += ";$(System.DefaultWorkingDirectory)/tfsec"
+          tfsec --version
+        workingDirectory: '$(dir)/dev'
+      displayName: Tfsec Installation
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: 'tfsec .'
+        workingDirectory: '$(dir)dev'
+
     
 - stage: plan
   displayName: Aks-Infra-planning
@@ -102,4 +148,15 @@ stages:
       inputs:
         targetType: 'inline'
         script: 'infracost breakdown --path $(dir)/dev'
+
+- stage: manualapproval
+  displayName: Manual Validation
+  pool: server
+  jobs:
+    - job: approval
+      displayName: Manual Approval
+      steps:
+      - task: ManualValidation@1
+        inputs:
+          notifyUsers: 'vikasshri2308@gmail.com'
         
