@@ -97,7 +97,7 @@ stages:
       inputs:
         targetType: 'inline'
         script: 'tfsec .'
-        workingDirectory: '$(dir)dev'
+        workingDirectory: '$(dir)/dev'
 
     
 - stage: plan
