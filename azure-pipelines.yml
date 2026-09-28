@@ -64,9 +64,9 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          Invoke-WebRequest -Uri https://github.com/terraform-linters/tflint/releases/download/latest/tflint_windows_amd64.zip -OutFile tflint.zip
-          Extract-Archive tflint.zip -DestinationPath tflint
-          $env:PATH += ";$(System.DefaultWorkingDirectory)/tflint"
+          Invoke-WebRequest -Uri https://github.com/terraform-linters/tflint/releases/latest/download/tflint_windows_amd64.zip -OutFile tflint.zip
+          Expand-Archive tflint.zip -DestinationPath tflint
+          $env:Path += ";$(System.DefaultWorkingDirectory)/tflint"
         workingDirectory: '$(dir)/dev'
       displayName: Tflint Installation
     - task: PowerShell@2
