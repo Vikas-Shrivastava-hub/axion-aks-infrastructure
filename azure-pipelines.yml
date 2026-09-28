@@ -22,8 +22,8 @@ stages:
 - stage: codevalidation
   displayName: Code Validation
   jobs:
-  - job: linting
-    displayName: Linting (tflint)
+  - job: validate
+    displayName: Terrafrom Validate
     steps:
     - task: TerraformTask@5
       inputs:
@@ -45,7 +45,7 @@ stages:
   
   - job: formatting
     displayName: Terrafrom fmt
-    dependsOn: linting
+    dependsOn: validate
     steps:
     - task: PowerShell@2
       inputs:
